@@ -27,7 +27,7 @@ def _get_file_list(root_dir, file_ext = '.tif'):
         path_r = str(fname.parent)
         bn = fname.name
         
-        ss = bn[:-4]
+        ss = fname.stem
         if '_t' in bn: 
             dd = [x[1:] for x in ss.split('_') if x[0]=='t']
             frame = int(dd[0])
@@ -59,7 +59,6 @@ class BasicFlow(Dataset):
                  scale_int = (0, 16),
                  expand_factor = 10,
                  is_augment = True,
-                 is_to_align = False,
                  max_samples_per_set = None,
                  samples_per_epoch = None
                  ):
@@ -67,7 +66,6 @@ class BasicFlow(Dataset):
         self.is_log_transform = is_log_transform
         self.scale_int = scale_int
         self.expand_factor = expand_factor
-        self.is_to_align = is_to_align
         self.is_augment = is_augment
         self.samples_per_epoch = samples_per_epoch
         
@@ -144,9 +142,6 @@ class BasicFlow(Dataset):
 
 
 if __name__ == '__main__':
-    
-    #src_root_dir = Path.home() / 'workspace/WormData/full_images/'
-    #src_root_dir = Path.home() / 'workspace/drosophila_eggs/'
     src_root_dir = Path.home() / 'workspace/denoising/data/c_elegans_divergent/train/'
      
     
