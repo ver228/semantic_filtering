@@ -10,7 +10,6 @@ import random
 import cv2
 import time
 import numpy as np
-from skimage.filters import threshold_otsu
 from torch.utils.data import Dataset 
 
 #_root_dir = Path.home() / 'OneDrive - Nexus365/microglia/data/cell_bgnd_divided/train'
@@ -584,7 +583,9 @@ if __name__ == '__main__':
 
     #%%
     #root_dir = '/Volumes/loco/workspace/denoising/data/BBBC026/'
-#    root_dir = Path.home() / 'workspace/denoising/data/BBBC026_v2/'
+    #root_dir = Path.home() / 'workspace/denoising/data/BBBC026_v2/'
+#    root_dir = '/Users/avelinojaver/Desktop/BBBC026_divided/'
+#    
 #    cells1_prefix = 'hepatocytes'
 #    cells2_prefix = 'fibroblasts'
 #    bgnd_prefix = 'background'
@@ -610,37 +611,8 @@ if __name__ == '__main__':
 #                             )  
     
     #%%
-    root_dir = Path.home() / 'workspace/denoising/data/BBBC042_small/train'
-    #root_dir = Path.home() / 'Desktop/BBBC042_divided/train'
-    cells1_prefix = 'foreground'
-    cells2_prefix = 'background_crops'
-    bgnd_prefix = 'background'
-    
-    gen = FluoMergedFlow(root_dir = root_dir,
-                            bgnd_prefix = bgnd_prefix,
-                            cells1_prefix = cells1_prefix,
-                            cells2_prefix = cells2_prefix,
-                            crop_size = (256, 256),
-                             is_log_transform = False,
-                             int_scale = (0, 255),
-                             img_ext = '*.tif',
-                             is_timeseries_dir = False,
-                             n_cells_per_crop = 5,
-                             n_bgnd_per_crop = 10,
-                             int_factor = (0.9, 1.1),
-                             bgnd_sigma_range = (0., 1.2),
-                             frac_crop_valid = 0.2,
-                             zoom_range = (0.9, 1.1),
-                             noise_range = (0., 10.),
-                             rotate_range = (0, 90),
-                             max_overlap = 0.1,
-                             is_separated_output = True
-                             )  
-    #for _ in tqdm.tqdm(range(10)):
-    #    x,y = gen._sample()
-#%%
-    #root_dir = Path.home() / 'workspace/denoising/data/microglia_v2'
-#    root_dir = Path.home() / 'Desktop/microglia'
+    #root_dir = Path.home() / 'workspace/denoising/data/BBBC042_small/train'
+#    root_dir = Path.home() / 'Desktop/BBBC042_divided/train'
 #    cells1_prefix = 'foreground'
 #    cells2_prefix = 'background_crops'
 #    bgnd_prefix = 'background'
@@ -649,26 +621,86 @@ if __name__ == '__main__':
 #                            bgnd_prefix = bgnd_prefix,
 #                            cells1_prefix = cells1_prefix,
 #                            cells2_prefix = cells2_prefix,
-#                            crop_size = (512, 512),
-#                             is_log_transform = True,
-#                             int_scale = (0, np.log(2**16)),
-#                             img_ext = '*.npy',
+#                            crop_size = (256, 256),
+#                             is_log_transform = False,
+#                             int_scale = (0, 255),
+#                             img_ext = '*.tif',
 #                             is_timeseries_dir = False,
-#                             n_cells_per_crop = 4,
-#                             n_bgnd_per_crop = 20,
-#                             int_factor = (0.1, 3.0),
-#                             bgnd_sigma_range = (0., 3.),
-#                             bgnd_mu_range = (-0.7, 0.7),
-#                             frac_crop_valid = 0.9,
+#                             n_cells_per_crop = 5,
+#                             n_bgnd_per_crop = 10,
+#                             int_factor = (0.9, 1.1),
+#                             bgnd_sigma_range = (0., 1.2),
+#                             frac_crop_valid = 0.2,
 #                             zoom_range = (0.9, 1.1),
 #                             noise_range = (0., 10.),
 #                             rotate_range = (0, 90),
-#                             max_overlap = 1.,
-#                             is_separated_output = False,
-#                             epoch_size = 500
+#                             max_overlap = 0.1,
+#                             is_separated_output = True
 #                             )  
+    #for _ in tqdm.tqdm(range(10)):
+    #    x,y = gen._sample()
+#%%
+    #root_dir = Path.home() / 'workspace/denoising/data/microglia_v2'
+    #root_dir = Path.home() / 'workspace/denoising/data/microglia_v2_tight'
     
-
+    root_dir = Path.home() / 'Desktop/microglia'
+    #root_dir = Path.home() / 'Desktop/microglia_tight'
+    
+    cells1_prefix = 'foreground'
+    cells2_prefix = 'background_crops'
+    bgnd_prefix = 'background'
+    
+    gen = FluoMergedFlow(root_dir = root_dir,
+                            bgnd_prefix = bgnd_prefix,
+                            cells1_prefix = cells1_prefix,
+                            cells2_prefix = cells2_prefix,
+                            crop_size = (512, 512),
+                             is_log_transform = True,
+                             int_scale = (0, np.log(2**16)),
+                             img_ext = '*.tif',
+                             is_timeseries_dir = False,
+                             n_cells_per_crop = 4,
+                             n_bgnd_per_crop = 10,
+                             int_factor = (0.1, 3.0),
+                             bgnd_sigma_range = (0., 3.),
+                             bgnd_mu_range = (-0.7, 0.7),
+                             frac_crop_valid = 0.9,
+                             zoom_range = (0.9, 1.1),
+                             noise_range = (0., 10.),
+                             rotate_range = (0, 90),
+                             max_overlap = 1.,
+                             is_separated_output = True,
+                             epoch_size = 500,
+                             int_base_q_range = (0, 10)
+                             )  
+    
+#%%
+#    root_dir = Path.home() / 'Desktop/MNIST_fashion/train'
+#    #root_dir = Path.home() / 'workspace/denoising/data/MNIST_fashion/train'
+#    cells1_prefix = 'foreground'
+#    cells2_prefix = 'background_crops'
+#    bgnd_prefix = 'background'
+#    
+#    gen = FluoMergedFlow(root_dir = root_dir,
+#                            bgnd_prefix = bgnd_prefix,
+#                            cells1_prefix = cells1_prefix,
+#                            cells2_prefix = cells2_prefix,
+#                            crop_size = (128, 128),
+#                             is_log_transform = False,
+#                             int_scale = (0, 255),
+#                             img_ext = '*.png',
+#                             is_timeseries_dir = False,
+#                             n_cells_per_crop = 5,
+#                             n_bgnd_per_crop = 10,
+#                             int_factor = (0.9, 1.1),
+#                             bgnd_sigma_range = (0., 1.2),
+#                             frac_crop_valid = 0.25,
+#                             zoom_range = (0.9, 1.1),
+#                             noise_range = (0., 5.),
+#                             rotate_range = (0, 90),
+#                             max_overlap = 0.5,
+#                             is_separated_output = True
+#                             )  
     #%%
 #    batch_size = 16    
 #    gen = FluoMergedFlow()
@@ -693,28 +725,7 @@ if __name__ == '__main__':
     
     #%%
     
-    
 
-#    root_dir = Path.home() / 'workspace/denoising/data/microglia/cell_bgnd_divided/test/'
-#    gen = FluoMergedFlow(root_dir = root_dir,
-#                         is_clean_output = True,
-#                         fgnd_prefix = 'cell_images_dilated'
-#                         )
-    
-#    #root_dir = Path.home() / 'workspace/denoising/data/vesicles_nanoscopy/50min_bio_10fps_Airyscan_ProcessingSetting3-3/'
-#    root_dir = Path.home() / 'workspace/denoising/data/vesicles_nanoscopy/test_50min_bio_10fps_Airyscan_ProcessingSetting3-3/'
-#    
-#    gen = FluoMergedFlow(root_dir = root_dir,
-#                         crop_size = (128, 128),
-#                         is_log_transform = False,
-#                         fgnd_prefix = 'foreground',
-#                         bgnd_prefix = 'background',
-#                         img_ext = '*.tif',
-#                         is_timeseries_dir = False,
-#                         n_cells_per_crop = 16,
-#                         int_scale = (0, 2**16-1),
-#                         bgnd_sigma_range = (0., 1.)
-#                         )
 #%%
     
 #    for ii, (X,Y) in enumerate(tqdm.tqdm(gen)):
@@ -731,12 +742,15 @@ if __name__ == '__main__':
         break
         
     #%%
+    save_dir = '/Users/avelinojaver/OneDrive - Nexus365/papers/miccai2019/data/synthetic/'
+    save_dir = Path(save_dir)
+    
     for ii in range(batch_size):
         xin = Xin[ii].squeeze().detach().numpy()
         
         
         #xout = Xout[ii][0].detach().numpy()
-        xhat = Xout[ii].detach().numpy()
+        xhat = Xout[ii].detach().numpy().squeeze()
         if xhat.ndim == 3:
             xout = np.rollaxis(xhat, 0, 3)
         else:
@@ -744,15 +758,19 @@ if __name__ == '__main__':
         
         fig, axs = plt.subplots(1,2, figsize = (12, 8), sharex=True, sharey=True)
         
-        vmin = min(xout.min(), xin.min())
-        vmax = max(xout.max(), xin.max())
-        
+        #vmin = min(xout.min(), xin.min())
+        #vmax = max(xout.max(), xin.max())
+        vmin, vmax = xin.min(), xin.max()
         print(vmin, vmax)
         
         axs[0].imshow(xin, cmap='gray', interpolation='none', vmin=vmin, vmax=vmax)
-        axs[1].imshow(xout, cmap='gray', interpolation='none', vmin=vmin, vmax=vmax)
+        axs[1].imshow(xout[..., 0], cmap='gray', interpolation='none', vmin=vmin, vmax=vmax)
         axs[0].axis('off')
         axs[1].axis('off')
-
+        
+        
+        x2save = ((xin - vmin)/(vmax - vmin)*255).astype(np.uint8)
+        cv2.imwrite(str(save_dir / f'synthetic_{ii}.png'), x2save)
+        
 
     

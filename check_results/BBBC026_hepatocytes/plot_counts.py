@@ -18,15 +18,21 @@ from scipy.stats import ttest_ind
 if __name__ == '__main__':
     #bn = 'sBBBC026-hepatocytes_l1smooth_20190220_184125_unet_adam_lr0.00032_wd0.0_batch32'
     
-    bn =  'BBBC026-separated_unet_l1smooth_20190224_105903_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-hepatocytes_unet_l1smooth_20190224_105953_adam_lr0.00032_wd0.0_batch32'
+    #bn = 'CELLS_349_BBBC026-separated_unet_l1smooth_20190224_105903_adam_lr0.00032_wd0.0_batch32'
+    bn = 'CELLS_349_BBBC026-hepatocytes_unet_l1smooth_20190224_105953_adam_lr0.00032_wd0.0_batch32'
     
-    fname = Path.home() / 'workspace' / ('CELLS_' + bn + '.csv')
+    root_dir = Path.home() / 'OneDrive - Nexus365/papers/miccai2019/data/hepatocytes/'
+    
+    fname = root_dir / f'{bn}.csv'
     df = pd.read_csv(str(fname))
     
     min_area = 300
     max_area = 5000
     df = df[(df['area'] >= min_area) & (df['area'] <= max_area)]
+    df = df[df['type'] == 'hep']
+    
+    plt.figure()
+    plt.hist(df['area'], 100)
     #%%
     #df_negative = df[df['well_id'].str.contains('01')]
     #df_positive = df[df['well_id'].str.contains('23')]
@@ -53,16 +59,10 @@ if __name__ == '__main__':
     plt.figure()
     sns.boxplot('type', 'vals', data=df)
     #%%
-    
-    
     dat_n = [('neg', np.mean(d)) for k, d in _negative]
     dat_p = [('pos', np.mean(d)) for k, d in _positive]
-    df = pd.DataFrame(dat_n + dat_p, columns = ['type', 'vals'])
+    df_plates = pd.DataFrame(dat_n + dat_p, columns = ['type', 'vals'])
     
-    plt.figure()
-    sns.boxplot('type', 'vals', data=df)
-    
-    #%%
     pos = [x[1] for x in dat_p]
     neg = [x[1] for x in dat_n]
     
@@ -71,25 +71,21 @@ if __name__ == '__main__':
     
     pos_s = np.std(pos)
     neg_s = np.std(neg)
-    #%%
+    
     Z = 1 - 3*(pos_s + neg_s)/(pos_m - neg_m)
     #%%
     
     t, p = ttest_ind(pos, neg)
-    
-    
-    print(Z)
-    print(p)
-    #%%
-    
+    ss = f"Z'-score={Z:.3}  p={p:.3}"
     
     #%%
-    #th_p = pos_m - 3*np.std(pos)
-    #th_n = neg_m + 3*np.std(neg)
+    save_name = root_dir / f'{bn}.pdf'
     
-    #https://en.wikipedia.org/wiki/Z-factor
+    plt.figure()
+    sns.boxplot('type', 'vals', data=df_plates)
     
-#    R = pos_m - neg_m
-#    S = th_p - th_n
-#    Z = S/R
-#    print(Z)
+    plt.ylim([0, 180])
+    plt.title(ss)
+    plt.savefig(str(save_name))
+    
+    

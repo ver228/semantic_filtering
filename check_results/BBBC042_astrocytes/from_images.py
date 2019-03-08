@@ -23,18 +23,19 @@ import matplotlib.patches as patches
 #%%
 if __name__ == '__main__':
     
-    bn = 'BBBC042_unet_l1smooth_20190226_003119_adam_lr0.00032_wd0.0_batch32'
+    #bn = 'BBBC042_unet_l1smooth_20190226_003119_adam_lr0.00032_wd0.0_batch32'
     #bn = 'BBBC042-small_unet_l1smooth_20190227_120531_adam_lr0.00032_wd0.0_batch32'
     #bn = 'BBBC042-v3_unet_l1smooth_20190227_153240_adam_lr0.00032_wd0.0_batch32'
     
     #bn = 'R_BBBC042_unet_l1smooth_20190228_191709_adam_lr0.00032_wd0.0_batch32'
     #bn = 'R_BBBC042-small_unet_l1smooth_20190228_191521_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'R_BBBC042-v3_unet_l1smooth_20190228_191527_adam_lr0.00032_wd0.0_batch32'
+    bn = 'R_BBBC042-v3_unet_l1smooth_20190228_191527_adam_lr0.00032_wd0.0_batch32'
     
-    bn = 'BBBC042-small-separated_unet_l1smooth_20190302_221604_adam_lr0.00032_wd0.0_batch32'
+    #bn = 'BBBC042-small-separated_unet_l1smooth_20190302_221604_adam_lr0.00032_wd0.0_batch32'
     #bn = 'BBBC042-v3-separated_unet_l1smooth_20190302_224236_adam_lr0.00032_wd0.0_batch32'
     
-    model_path = Path.home() / 'workspace/denoising/results/BBBC042' / bn / 'checkpoint.pth.tar'
+    n_epochs = 299#499#
+    model_path = Path.home() / 'workspace/denoising/results/BBBC042' / bn / f'checkpoint-{n_epochs}.pth.tar'
     
     int_scale = (0,255)
     
@@ -47,14 +48,39 @@ if __name__ == '__main__':
     model.load_state_dict(state['state_dict'])
     model.eval()
     #%%
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/50.tif'
     #fname = '/Users/avelinojaver/Downloads/BBBC042/images/5.tif'
     
-    fname = '/Users/avelinojaver/Downloads/BBBC042/images/1075.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1075.tif'
     #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1020.tif'
     #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1100.tif'
     #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1010.tif'
     #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1004.tif'
     
+    
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1021.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1003.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1074.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1041.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1020.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1016.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1011.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1006.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1003.tif'
+    
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1051.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1049.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1039.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1037.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1022.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1017.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1007.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1006.tif'
+    
+    
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1021.tif'
+    fname = '/Users/avelinojaver/Downloads/BBBC042/images/1049.tif'
+    #fname = '/Users/avelinojaver/Downloads/BBBC042/images/1026.tif'
     
     annotations_file = str(fname).replace('/images/', '/positions/').replace('.tif', '.txt')
     df = pd.read_csv(str(annotations_file), delim_whitespace=True, header = None)
@@ -90,13 +116,14 @@ if __name__ == '__main__':
     
     
     th = threshold_otsu(x2th)*0.8
+    #th = 0.05
     x_th = x2th>th
     
     #%%
-    fig, axs = plt.subplots(1,3,sharex=True, sharey=True, figsize=(20, 8))
+    n_plots = 4 if xhat.shape[0] == 3 else 2
+    fig, axs = plt.subplots(1, n_plots,sharex=True, sharey=True, figsize=(20, 8))
     
     axs[0].imshow(img_ori, cmap='gray')#, vmin=0, vmax=1)
-    axs[0].set_title('Original')
     
     for _, row in df.iterrows():
         x1, y1, x2, y2 = row[4:8]
@@ -106,12 +133,15 @@ if __name__ == '__main__':
         rect = patches.Rectangle(cc, ll, ww, linewidth=2, edgecolor='r', facecolor='none', linestyle = '-')
         axs[0].add_patch(rect)
     
-    axs[1].imshow(x2th, cmap='gray')#, vmin=0, vmax=1)
-    axs[1].set_title('Prediction')
-    
-    
-    axs[2].imshow(x_th)
-    axs[2].set_title(f'Prediction > {th}')
+    if xhat.shape[0] == 3:
+        
+        axs[1].imshow(xhat[0] , cmap='gray')#, vmin=0, vmax=1)
+        
+        axs[2].imshow(xhat[2] , cmap='gray')#, vmin=0, vmax=1)
+        
+        axs[3].imshow(xhat[1] , cmap='gray')#, vmin=0, vmax=1)
+    else:
+        axs[1].imshow(xhat, cmap='gray')
     for ax in axs.flatten():
         ax.axis('off')
-    
+#    

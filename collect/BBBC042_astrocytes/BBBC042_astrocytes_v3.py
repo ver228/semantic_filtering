@@ -60,13 +60,14 @@ def _segment_crop(crop_ori, max_dist_norm = 0.42, min_length_norm = 0.3):
     return crop_cleaned
 if __name__ == '__main__':
     _is_debug = False
+    n_bgnd_crops = 15
     
-    #raw_root_dir = Path('/Users/avelinojaver/Downloads/BBBC042/images/')
-    #save_root_dir = Path.home() / 'Desktop/BBBC042_divided'
+    raw_root_dir = Path('/Users/avelinojaver/Downloads/BBBC042/images/')
+    save_root_dir = Path.home() / 'Desktop/BBBC042_divided'
     
-    raw_root_dir = Path.home() / 'workspace/datasets/BBBC042/images/'
+    #raw_root_dir = Path.home() / 'workspace/datasets/BBBC042/images/'
     #save_root_dir = Path.home() / 'workspace/denoising/data/BBBC042_small/'
-    save_root_dir = Path.home() / 'workspace/denoising/data/BBBC042_v3/'
+    #save_root_dir = Path.home() / 'workspace/denoising/data/BBBC042_v3/'
     
     
     
@@ -127,7 +128,7 @@ if __name__ == '__main__':
         #mask = np.zeros_like(fgnd_bw)
         
         bgnd_crops = []
-        for _ in range(30):
+        for _ in range(n_bgnd_crops):
             crop_size = random.randint(64, 192)
             xi = random.randint(0, img_no_cells.shape[0] - crop_size)
             yi = random.randint(0, img_no_cells.shape[1] - crop_size)
@@ -135,7 +136,7 @@ if __name__ == '__main__':
             img_crop = img_no_cells[xi:xi + crop_size, yi:yi + crop_size]
             crop_cleaned = _segment_crop(img_crop, max_dist_norm = 1.5)
             
-            if crop_cleaned is None:
+            if crop_cleaned is None or np.all(crop_cleaned==0):
                 continue
             
             bgnd_crops.append(crop_cleaned)

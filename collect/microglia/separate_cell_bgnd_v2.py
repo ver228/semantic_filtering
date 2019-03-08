@@ -15,7 +15,7 @@ import numpy as np
 from skimage.filters import threshold_otsu
 from skimage.morphology import skeletonize, reconstruction
 
-_debug = False
+
 
 #%%
 def process_file(fname, min_area = 1e4, cell_border_fg_th = 0.12):
@@ -66,6 +66,8 @@ def process_file(fname, min_area = 1e4, cell_border_fg_th = 0.12):
         bw = np.zeros((h,w), np.uint8)
         cv2.drawContours(bw,[cnt_n] , -1, 255, -1)
         
+        
+        
         roi = img_ori[y:y+h, x:x+w].copy()
         roi[bw == 0] = 0
         
@@ -81,7 +83,7 @@ def process_file(fname, min_area = 1e4, cell_border_fg_th = 0.12):
         fgnd = img_ori.copy()
         fgnd[bgnd>0] = 0
         
-        import maptlotlib.pylab as plt
+        import matplotlib.pylab as plt
         fig, axs = plt.subplots(1, 4, sharex=True, sharey=True, figsize= (15, 5))
         axs[0].imshow(img_n)
         axs[1].imshow(np.log(fgnd+1))
@@ -97,8 +99,20 @@ def process_file(fname, min_area = 1e4, cell_border_fg_th = 0.12):
 
 
 #%%
+def _normalize(roi):
+    roi_n = roi.astype(np.float32)
+    mm = roi_n>0
+    roi_n[mm] -= roi_n[mm].min()
+    roi_n = np.log(roi_n + 1)
+    roi_n *= 255/roi_n.max()
+    roi_n = roi_n.astype(np.uint8)
+    return roi_n
+
 
 if __name__ == '__main__':
+    _debug = False
+    _tight_mask = False
+    
     valid_rows = ['B', 'D', 'F', 'H', 'J', 'L', 'N']
      
     src_root_dir = Path.home() / 'OneDrive - Nexus365/microglia/data'
@@ -107,8 +121,11 @@ if __name__ == '__main__':
     #src_root_dir = Path.home() / 'workspace/Microglia/data'
     #save_root_dir = Path.home() / 'workspace/denoising/data/microglia_v2'
 
-    #save_ext = 'tif'    
-    save_ext = 'npy'
+    if _tight_mask:
+        save_root_dir = save_root_dir.parent / (save_root_dir.name + '_tight')
+
+    save_ext = 'tif'    
+    #save_ext = 'npy'
     
     if _debug:
         save_root_dir = save_root_dir / 'debug'
@@ -124,8 +141,8 @@ if __name__ == '__main__':
     df = df[(df['z'] == 1) & (df['frame'] == 1)]
     
     
-    df = df[df['date']=='2018.08.20'];  fg_edge_th = 0.07; bg_edge_th = 0.02
-    #df = df[(df['date']=='180822') & ~df['path'].str.contains('_ZTest_')]; fg_edge_th = 0.045; bg_edge_th = 0.01
+    #df = df[df['date']=='2018.08.20'];  fg_edge_th = 0.07; bg_edge_th = 0.02
+    df = df[(df['date']=='180822') & ~df['path'].str.contains('_ZTest_')]; fg_edge_th = 0.045; bg_edge_th = 0.01
     #%%
     
     all_scores_avgs = []
@@ -158,36 +175,46 @@ if __name__ == '__main__':
             ff = save_dir_bg / f'{save_prefix}.{save_ext}'
             ff.parent.mkdir(exist_ok=True, parents=True)
             
-            if save_ext == 'npy':
-                np.save(str(ff), bgnd)
+            if _debug:
+                bgnd2save = _normalize(bgnd)
             else:
-                cv2.imwrite(str(ff), bgnd)
+                bgnd2save = bgnd
+            
+            if save_ext == 'npy':
+                np.save(str(ff), bgnd2save)
+            else:
+                cv2.imwrite(str(ff), bgnd2save)
             
             for i_cell, (roi, edge_score) in enumerate(zip(rois, edge_scores)):
                 if edge_score >= fg_edge_th:
                     save_dir = save_dir_fg_crops
+                    
+                    if _tight_mask:
+                    
+                        th = threshold_otsu(roi[roi>0])*0.3
+                        bw = (roi>th).astype(np.uint8)
+                        
+                        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
+                        bw = cv2.morphologyEx(bw, cv2.MORPH_CLOSE, kernel, iterations=5)
+                        
+                        n_labs, labels, stats, centroids = cv2.connectedComponentsWithStats(bw)
+                        
+                        ind = np.argmax(stats[1:, -1]) + 1
+                        roi[labels != ind] = 0
+                    
                 elif edge_score <= bg_edge_th:
                     save_dir = save_dir_bg_crops
                 else:
                     continue
-                
-                
                 
                 fname = 'cell{}_{}.{}'.format(i_cell + 1, save_prefix, save_ext)
                 ff = save_dir /  fname
                 ff.parent.mkdir(exist_ok=True, parents=True)
                 
                 if _debug:
-                    roi_n = roi.astype(np.float32)
-                    mm = roi_n>0
-                    roi_n[mm] -= roi_n[mm].min()
-                    roi_n = np.log(roi_n + 1)
-                    roi_n *= 255/roi_n.max()
-                    roi_n = roi_n.astype(np.uint8)
-                    roi2save = roi_n
+                    roi2save = _normalize(roi)
                 else:
                     roi2save = roi
-                
                 
                 if save_ext == 'npy':
                     np.save(str(ff), roi2save)
