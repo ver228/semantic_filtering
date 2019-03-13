@@ -8,7 +8,7 @@ Created on Thu Sep 27 11:12:10 2018
 import sys
 from pathlib import Path
 
-dname = Path(__file__).resolve().parents[2]
+dname = Path(__file__).resolve().parents[3]
 sys.path.append(str(dname))
 
 
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     
     
     #%%
-    is_plot = False; n_iter = 1000
-    #is_plot = True; n_iter = 5
+    #is_plot = False; n_iter = 1000
+    is_plot = True; n_iter = 5
     
     
     th = 0.1

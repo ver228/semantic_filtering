@@ -11,12 +11,13 @@ from pathlib import Path
 dname = Path(__file__).resolve().parents[2]
 sys.path.append(str(dname))
 
-
+from scipy.optimize import linear_sum_assignment
 from bgnd_removal.models import UNet
 
 import torch
 import numpy as np
 import cv2
+import pandas as pd
 
 from pathlib import Path
 #%%
@@ -62,6 +63,55 @@ def _process_img(model, xin, device):
     
     return xhat
 
+#%%
+def _get_bounding_boxes(bw):
+    bw = bw.astype(np.uint8)
+    _, cnts, _ = cv2.findContours(bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    
+    bboxes = [cv2.boundingRect(x) for x in cnts]
+    bboxes = np.array(bboxes)
+    return bboxes
+#%%
+#bb_pred, bb_target = bboxes[0]
+
+def xywh2xyxy(bb):
+    x1 = bb[..., 0]
+    x2 = x1 + bb[..., 2]
+    
+    y1 = bb[..., 1]
+    y2 = y1 + bb[..., 3]
+    
+    return x1, y1, x2, y2
+
+def score_bboxes(bbox_pred, bbox_target):
+    p_x1, p_y1, p_x2, p_y2 = xywh2xyxy(bbox_pred)
+    t_x1, t_y1, t_x2, t_y2 = xywh2xyxy(bbox_target)
+    
+    
+    xx1 = np.maximum(p_x1[..., None], t_x1)
+    yy1 = np.maximum(p_y1[..., None], t_y1)
+    xx2 = np.minimum(p_x2[..., None], t_x2)
+    yy2 = np.minimum(p_y2[..., None], t_y2)
+    w = np.maximum(0.0, xx2 - xx1 + 1)
+    h = np.maximum(0.0, yy2 - yy1 + 1)
+    
+    inter = w * h
+    cost_matrix = inter.copy()
+    cost_matrix[cost_matrix==0] = 1e-3
+    cost_matrix = 1/cost_matrix
+    pred_ind, true_ind = linear_sum_assignment(cost_matrix)
+    
+    good = inter[pred_ind, true_ind] > 0
+    pred_ind, true_ind = pred_ind[good], true_ind[good]
+    
+    
+    TP = pred_ind.size
+    FP = inter.shape[0] - pred_ind.size
+    FN = inter.shape[1] - pred_ind.size
+
+    return TP, FP, FN
+
+#%%
 def get_mIoU(model_path, data_root, device):
     
     model = UNet(n_channels = 1, n_classes = 1)
@@ -75,6 +125,7 @@ def get_mIoU(model_path, data_root, device):
     
     all_IoU = []
     fnames = []
+    scores = []
     for fname, X, Y in gen:
         xhat = _process_img(model, X, device)        
         pred_bw = (xhat - X.astype(np.float32)) > th
@@ -83,12 +134,20 @@ def get_mIoU(model_path, data_root, device):
         U = (target_bw | pred_bw).sum()
         
         #if I/U < 0.9: print(fname)
-        
-        
         all_IoU.append((I, U))
+        
+        bbox_pred = _get_bounding_boxes(pred_bw)
+        bbox_target = _get_bounding_boxes(target_bw)
+        
+        TP, FP, FN = score_bboxes(bbox_pred, bbox_target)
+        
+        scores.append((TP, FP, FN))
+        
         fnames.append(fname)
         
-    return all_IoU, fnames
+        
+        
+    return all_IoU, fnames, scores
 
 
 if __name__ == '__main__':
@@ -106,47 +165,51 @@ if __name__ == '__main__':
     
     results_root = Path.home() / 'workspace/denoising/results/'
     
-    
+    save_name = Path.home() / 'workspace/RESULTS_worms-divergent-samples.csv'
     models2process = [x.parent.name + '/' + x.name for x in results_root.glob('worms-divergent-samples*/*/')]
+    models2process += [
+            'worms-divergent/worms-divergent_l1_20190201_011625_unet_adam_lr0.0001_wd0.0_batch36', 
+            'worms-divergent/worms-divergent_l2_20190201_011853_unet_adam_lr0.0001_wd0.0_batch36',
+            'worms-divergent/worms-divergent_l1smooth_20190201_011918_unet_adam_lr0.0001_wd0.0_batch36'
+            ]
     
-    
-#    models2process = [
-#            'worms-divergent/worms-divergent_l1_20190201_011625_unet_adam_lr0.0001_wd0.0_batch36', 
-#            'worms-divergent/worms-divergent_l2_20190201_011853_unet_adam_lr0.0001_wd0.0_batch36',
-#            'worms-divergent/worms-divergent_l1smooth_20190201_011918_unet_adam_lr0.0001_wd0.0_batch36'
-#            ]
-    
-    
-    
+    #%%
     _results = []
     for bn in tqdm.tqdm(models2process):
         model_path = results_root / bn / 'checkpoint.pth.tar'
         
-        all_IoU, fnames  = get_mIoU(model_path, data_root, device)
+        all_IoU, fnames, scores  = get_mIoU(model_path, data_root, device)
         
         Is, Us = map(np.sum, zip(*all_IoU))
         mIoU = Is/Us
         print(f'{mIoU} :  {bn}')
         
-        _results.append((all_IoU, bn, fnames))
+        _results.append((all_IoU, scores, bn, fnames))
         
+    #%%
     
-    for all_IoU, bn, fnames in _results:
+    outs = []
+    for all_IoU, scores, bn, fnames in _results:
         Is, Us = map(np.sum, zip(*all_IoU))
         mIoU = Is/Us
         
+        #valid_fnames, IoUs = zip(*[(f, i/u) for f, (i,u) in zip(fnames, all_IoU) if u > 0])
+        #p_IoU = np.percentile(IoUs, [0, 25, 50, 75, 100])
         
-        valid_fnames, IoUs = zip(*[(f, i/u) for f, (i,u) in zip(fnames, all_IoU) if u > 0])
+        TP, FP, FN = map(sum, zip(*scores))
         
-        p_IoU = np.percentile(IoUs, [0, 25, 50, 75, 100])
+        P = TP/(TP+FP)
+        R = TP/(TP+FN)
+        F1 = 2*P*R/(P+R)
         
-        print(f'{mIoU} : {p_IoU} : {bn}')
+        print(f'{bn}, mIoU={mIoU}, P={P}, R={R}, F1={F1}')
         
-#        print('WORSE::')
-#        for ii in np.argsort(IoUs)[:10]:
-#            print(IoUs[ii], valid_fnames[ii])
         
-    
+        outs.append((bn, mIoU, P, R, F1))
+        
+        
+    df = pd.DataFrame(outs, columns = ['basename', 'mIoU', 'P', 'R', 'F1'])
+    df.to_csv(str(save_name))
     
     #%%
 

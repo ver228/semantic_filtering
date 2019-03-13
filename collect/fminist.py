@@ -9,6 +9,7 @@ from pathlib import Path
 import struct
 import random
 
+from tqdm import tqdm
 import numpy as np
 import cv2
 from torch.utils.data import Dataset
@@ -43,25 +44,30 @@ def _read_insets(fname_images, fname_labels):
     return inset_classes
 
 
-def generate_bgnd(bgnd_size = (512, 512), n_cicles = 40, max_intensity = 64):
+def generate_bgnd(bgnd_size = (512, 512), n_cicles = 20, max_intensity = 32):
     
     max_circ_size = bgnd_size[0]//2
-    
-    bgnd = np.zeros(bgnd_size,  np.float32)
+    min_circ_size = bgnd_size[0]//4
+    bgnd = np.full(bgnd_size, max_intensity//2, np.float32)
     for _ in range(n_cicles):
-        x = random.randint(0, bgnd_size[0]-1)
-        y = random.randint(0, bgnd_size[1]-1)
-        r = random.randint(5, max_circ_size)
-        val = random.randint(1, max_intensity)
+        r = random.randint(min_circ_size, max_circ_size)
+        x = random.randint(-r, bgnd_size[0]+r)
+        y = random.randint(-r, bgnd_size[1]+r)
+        val = random.randint(max_intensity//2, max_intensity)
         cv2.circle(bgnd, (x,y), r, val, -1)
     
-    sigma_ = random.uniform(0, max_intensity//2)
+    sigma_ = random.uniform(0, max_intensity//4)
     noise = np.random.normal(0, sigma_, bgnd.shape)
-    bgnd = cv2.blur(bgnd, (11,11)) + noise
+    bgnd = cv2.blur(bgnd, (121,121)) + noise
     bgnd = np.clip(bgnd, 0, 255).astype(np.uint8)
     return bgnd
 #%%
 def process_data(_insets, foreground_label, set_type):
+    
+    max_int = 256
+    bgnd_max_intensity = 64
+    scale_factor = (max_int - bgnd_max_intensity)/max_int
+    
     for k, data in _insets.items():
         save_dir = save_dir_root / set_type
         if k == foreground_label:
@@ -71,19 +77,22 @@ def process_data(_insets, foreground_label, set_type):
         save_dir.mkdir(exist_ok=True, parents=True)
         
         
-        data_r = (3.*data/4.).astype(np.uint8)
+        data_r = (scale_factor*data).astype(np.uint8)
         for ii, img in enumerate(data_r):
             save_name = save_dir / f'{k}_{ii}.png'
             cv2.imwrite(str(save_name), img)
-    
+            
+            
     save_dir = save_dir_root / set_type / 'background'
     save_dir.mkdir(exist_ok=True, parents=True)
-    for ii in range(500):
+    for ii in tqdm(range(2000), desc='Creating Background'):
         bgnd = generate_bgnd()
         save_name = save_dir / f'B_{ii}.png'
         cv2.imwrite(str(save_name), bgnd)
 #%%
 if __name__ == '__main__':
+    foreground_label = 9
+    
     root_dir = Path.home() / 'workspace/datasets/MNIST_fashion'
     
     save_dir_root = Path.home() / 'workspace/denoising/data/MNIST_fashion'
@@ -94,9 +103,13 @@ if __name__ == '__main__':
     test_img_file = root_dir / 'raw' / 't10k-images-idx3-ubyte'
     test_lbl_file = root_dir / 'raw' / 't10k-labels-idx1-ubyte'
 
+    #bgnd = generate_bgnd()
+    #plt.imshow(bgnd)
+    
+
     train_insets = _read_insets(train_img_file, train_lbl_file)
     test_insets = _read_insets(test_img_file, test_lbl_file)
     
-    process_data(train_insets, foreground_label = 9, set_type = 'train')
-    process_data(test_insets, foreground_label = 9, set_type = 'test')
+    process_data(train_insets, foreground_label = foreground_label, set_type = 'train')
+    process_data(test_insets, foreground_label = foreground_label, set_type = 'test')
     

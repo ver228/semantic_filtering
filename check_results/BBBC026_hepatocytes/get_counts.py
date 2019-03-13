@@ -67,7 +67,11 @@ if __name__ == '__main__':
     n_epochs = 349
     
     #bn = 'BBBC026-separated_unet_l1smooth_20190224_105903_adam_lr0.00032_wd0.0_batch32'
-    bn = 'BBBC026-hepatocytes_unet_l1smooth_20190224_105953_adam_lr0.00032_wd0.0_batch32'
+    #bn = 'BBBC026-hepatocytes_unet_l1smooth_20190224_105953_adam_lr0.00032_wd0.0_batch32'
+    
+    bn = 'BBBC026-separated_unet_l1smooth_20190226_082017_adam_lr0.00032_wd0.0_batch32'
+    #bn = 'BBBC026-hepatocytes_unet_l1smooth_20190226_082040_adam_lr0.00032_wd0.0_batch32'
+    #bn = 'BBBC026-fibroblasts_unet_l1smooth_20190226_082007_adam_lr0.00032_wd0.0_batch32'
     
     model_path = Path.home() / 'workspace/denoising/results/BBBC026' / bn / f'checkpoint-{n_epochs}.pth.tar'
     n_ch_in, n_ch_out  = 1, 1
@@ -114,20 +118,23 @@ if __name__ == '__main__':
             X = torch.from_numpy(xn[None])
             X = X.to(device)
             Xhat = model(X)
-            
-            
         
         xhat = Xhat[0].detach().cpu().numpy()
         
+        if 'separate' in bn:
+            prediction_maps = {key:xhat[ii] for ii,key in enumerate(['hep', 'bad', 'fib'])}
+        elif 'fibroblast' in bn:
+            prediction_maps = {'fib':xhat[0]}
+        elif 'hepatocyte' in bn:
+            prediction_maps = {'hep':xhat[0]}
         
         
-        labels_hep, th = get_labels(xhat[0], th_min = th_min, min_area = min_area)
-        props_hep = regionprops(labels_hep)
+        out_props = {}
+        for k_class, pred in prediction_maps.items():
+            labels, th = get_labels(pred, th_min = th_min, min_area = min_area)
+            out_props[k_class] = regionprops(labels)
         
-        labels_fib, th = get_labels(xhat[-1], th_min = th_min, min_area = min_area)
-        props_fib = regionprops(labels_fib)
-        
-        
+         
         
         if _debug:
             #%%
@@ -146,27 +153,20 @@ if __name__ == '__main__':
             axs[1].imshow(xhat[0])
             axs[1].plot(x, y, 'r.')
             
-            axs[2].imshow(labels_hep)
+            axs[2].imshow(labels['hep'])
             
             bn_file = fname.name.partition('_')[-1].rpartition('_')[0]
             plt.suptitle((th, bn_file))
             #%%
         bn_file, well_id, site_id, _ = fname.name.split('_')
-            
-        if len(props_hep) > 0:
-            cmy, cmx = zip(*[x.centroid for x in props_hep])
-            areas = [x.area for x in props_hep]
-            N = len(props_hep)
-            rows = list(zip(['hep']*N, [well_id]*N, [site_id]*N, cmx, cmy, areas))
+        
+        for k_class, props in out_props.items():
+            cmy, cmx = zip(*[x.centroid for x in props])
+            areas = [x.area for x in props]
+            N = len(props)
+            rows = list(zip([k_class]*N, [well_id]*N, [site_id]*N, cmx, cmy, areas))
             all_data += rows
             
-        if len(props_fib) > 0:
-            cmy, cmx = zip(*[x.centroid for x in props_fib])
-            areas = [x.area for x in props_fib]
-            N = len(props_fib)
-            rows = list(zip(['fib']*N, [well_id]*N, [site_id]*N, cmx, cmy, areas))
-            all_data += rows
-    
     if not _debug:
         df = pd.DataFrame(all_data, columns = ['type', 'well_id', 'site_id', 'cm_x', 'cm_y', 'area'])
         df.to_csv(str(save_name), index = False)

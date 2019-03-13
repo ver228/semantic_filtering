@@ -67,8 +67,6 @@ class OverlapsTracker():
         if overlap_frac > self.max_overlap:
             return False
         
-        
-        
         #check the fraction of pixels in each of the previous crops that will be cover with the new data
         bbox = (xi, yi, xf, yf)
         if len(self.bbox_placed):
@@ -640,43 +638,12 @@ if __name__ == '__main__':
     #for _ in tqdm.tqdm(range(10)):
     #    x,y = gen._sample()
 #%%
-    #root_dir = Path.home() / 'workspace/denoising/data/microglia_v2'
-    #root_dir = Path.home() / 'workspace/denoising/data/microglia_v2_tight'
-    
-    root_dir = Path.home() / 'Desktop/microglia'
-    #root_dir = Path.home() / 'Desktop/microglia_tight'
-    
-    cells1_prefix = 'foreground'
-    cells2_prefix = 'background_crops'
-    bgnd_prefix = 'background'
-    
-    gen = FluoMergedFlow(root_dir = root_dir,
-                            bgnd_prefix = bgnd_prefix,
-                            cells1_prefix = cells1_prefix,
-                            cells2_prefix = cells2_prefix,
-                            crop_size = (512, 512),
-                             is_log_transform = True,
-                             int_scale = (0, np.log(2**16)),
-                             img_ext = '*.tif',
-                             is_timeseries_dir = False,
-                             n_cells_per_crop = 4,
-                             n_bgnd_per_crop = 10,
-                             int_factor = (0.1, 3.0),
-                             bgnd_sigma_range = (0., 3.),
-                             bgnd_mu_range = (-0.7, 0.7),
-                             frac_crop_valid = 0.9,
-                             zoom_range = (0.9, 1.1),
-                             noise_range = (0., 10.),
-                             rotate_range = (0, 90),
-                             max_overlap = 1.,
-                             is_separated_output = True,
-                             epoch_size = 500,
-                             int_base_q_range = (0, 10)
-                             )  
-    
-#%%
-#    root_dir = Path.home() / 'Desktop/MNIST_fashion/train'
-#    #root_dir = Path.home() / 'workspace/denoising/data/MNIST_fashion/train'
+#    #root_dir = Path.home() / 'workspace/denoising/data/microglia_v2'
+#    #root_dir = Path.home() / 'workspace/denoising/data/microglia_v2_tight'
+#    
+#    root_dir = Path.home() / 'Desktop/microglia'
+#    #root_dir = Path.home() / 'Desktop/microglia_tight'
+#    
 #    cells1_prefix = 'foreground'
 #    cells2_prefix = 'background_crops'
 #    bgnd_prefix = 'background'
@@ -685,22 +652,53 @@ if __name__ == '__main__':
 #                            bgnd_prefix = bgnd_prefix,
 #                            cells1_prefix = cells1_prefix,
 #                            cells2_prefix = cells2_prefix,
-#                            crop_size = (128, 128),
-#                             is_log_transform = False,
-#                             int_scale = (0, 255),
-#                             img_ext = '*.png',
+#                            crop_size = (512, 512),
+#                             is_log_transform = True,
+#                             int_scale = (0, np.log(2**16)),
+#                             img_ext = '*.tif',
 #                             is_timeseries_dir = False,
-#                             n_cells_per_crop = 5,
+#                             n_cells_per_crop = 4,
 #                             n_bgnd_per_crop = 10,
-#                             int_factor = (0.9, 1.1),
-#                             bgnd_sigma_range = (0., 1.2),
-#                             frac_crop_valid = 0.25,
+#                             int_factor = (0.1, 3.0),
+#                             bgnd_sigma_range = (0., 3.),
+#                             bgnd_mu_range = (-0.7, 0.7),
+#                             frac_crop_valid = 0.9,
 #                             zoom_range = (0.9, 1.1),
-#                             noise_range = (0., 5.),
+#                             noise_range = (0., 10.),
 #                             rotate_range = (0, 90),
-#                             max_overlap = 0.5,
-#                             is_separated_output = True
+#                             max_overlap = 1.,
+#                             is_separated_output = True,
+#                             epoch_size = 500,
+#                             int_base_q_range = (0, 10)
 #                             )  
+    
+#%%
+    root_dir = Path.home() / 'Desktop/MNIST_fashion/train'
+    #root_dir = Path.home() / 'workspace/denoising/data/MNIST_fashion/train'
+    cells1_prefix = 'foreground'
+    cells2_prefix = 'background_crops'
+    bgnd_prefix = 'background'
+    
+    gen = FluoMergedFlow(root_dir = root_dir,
+                            bgnd_prefix = bgnd_prefix,
+                            cells1_prefix = cells1_prefix,
+                            cells2_prefix = cells2_prefix,
+                            crop_size = (128, 128),
+                             is_log_transform = False,
+                             int_scale = (0, 255),
+                             img_ext = '*.png',
+                             is_timeseries_dir = False,
+                             n_cells_per_crop = 5,
+                             n_bgnd_per_crop = 10,
+                             int_factor = (0.9, 1.1),
+                             bgnd_sigma_range = (0., 1.2),
+                             frac_crop_valid = 0.25,
+                             zoom_range = (0.9, 1.1),
+                             noise_range = (0., 5.),
+                             rotate_range = (0, 90),
+                             max_overlap = 0.5,
+                             is_separated_output = True
+                             )  
     #%%
 #    batch_size = 16    
 #    gen = FluoMergedFlow()
@@ -762,6 +760,8 @@ if __name__ == '__main__':
         #vmax = max(xout.max(), xin.max())
         vmin, vmax = xin.min(), xin.max()
         print(vmin, vmax)
+        
+        vmax = 1.
         
         axs[0].imshow(xin, cmap='gray', interpolation='none', vmin=vmin, vmax=vmax)
         axs[1].imshow(xout[..., 0], cmap='gray', interpolation='none', vmin=vmin, vmax=vmax)
