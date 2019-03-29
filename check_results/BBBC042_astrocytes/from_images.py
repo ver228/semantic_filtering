@@ -22,17 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 #%%
 if __name__ == '__main__':
-    
-    #bn = 'BBBC042_unet_l1smooth_20190226_003119_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC042-small_unet_l1smooth_20190227_120531_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC042-v3_unet_l1smooth_20190227_153240_adam_lr0.00032_wd0.0_batch32'
-    
-    #bn = 'R_BBBC042_unet_l1smooth_20190228_191709_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'R_BBBC042-small_unet_l1smooth_20190228_191521_adam_lr0.00032_wd0.0_batch32'
-    bn = 'R_BBBC042-v3_unet_l1smooth_20190228_191527_adam_lr0.00032_wd0.0_batch32'
-    
-    #bn = 'BBBC042-small-separated_unet_l1smooth_20190302_221604_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC042-v3-separated_unet_l1smooth_20190302_224236_adam_lr0.00032_wd0.0_batch32'
+    bn = 'BBBC042-v3-separated_unet_l1smooth_20190302_224236_adam_lr0.00032_wd0.0_batch32'
     
     n_epochs = 299#499#
     model_path = Path.home() / 'workspace/denoising/results/BBBC042' / bn / f'checkpoint-{n_epochs}.pth.tar'

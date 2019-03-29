@@ -21,9 +21,9 @@ import cv2
 if __name__ == '__main__':
     #new
     
-    bn = 'worms-divergent_l1_20190201_011625_unet_adam_lr0.0001_wd0.0_batch36'
+    #bn = 'worms-divergent_l1_20190201_011625_unet_adam_lr0.0001_wd0.0_batch36'
     #bn = 'worms-divergent_l2_20190201_011853_unet_adam_lr0.0001_wd0.0_batch36'
-    #bn = 'worms-divergent_l1smooth_20190201_011918_unet_adam_lr0.0001_wd0.0_batch36'
+    bn = 'worms-divergent_l1smooth_20190201_011918_unet_adam_lr0.0001_wd0.0_batch36'
     
     model_path = f'/Volumes/rescomp1/data/denoising/results/worms-divergent/{bn}/checkpoint.pth.tar'
     
@@ -46,9 +46,10 @@ if __name__ == '__main__':
     
     #fname = '/Volumes/rescomp1/data/denoising/data/c_elegans_full/test/MMP/MaskedVideos/MMP_Set2_201217/VC20527_worms10_food1-10_Set2_Pos5_Ch3_20122017_152030/1.tif'
     
-    fname = '/Users/avelinojaver/OneDrive - Nexus365/worms/skeletonize_training/manual_annotations/raw/Phase3/MaskedVideos/Set1_CB369_CB1490_Ch1_03072018_163429.hdf5'
-    
-    
+    #fname = '/Users/avelinojaver/OneDrive - Nexus365/worms/skeletonize_training/manual_annotations/raw/Phase3/MaskedVideos/Set1_CB369_CB1490_Ch1_03072018_163429.hdf5'
+    #fname = '/Volumes/rescomp1/data/denoising/data/c_elegans_divergent/test/MaskedVideos/CeNDR_Set2_060717/CB4856_worms5_food1-10_Set7_Pos4_Ch5_06072017_144104/3.tif'
+    fname = '/Volumes/rescomp1/data/denoising/data/c_elegans_divergent/test/MaskedVideos/CeNDR_Set2_060717/JU775_worms10_food1-10_Set9_Pos4_Ch2_06072017_152141/_0.tif'
+    #fname = '/Volumes/rescomp1/data/denoising/data/c_elegans_divergent/test/MaskedVideos/CeNDR_Set2_060717/DL238_worms10_food1-10_Set3_Pos4_Ch1_06072017_124159/_0.tif'
     fname = Path(fname)
     
     if fname.suffix == '.hdf5':
@@ -83,8 +84,16 @@ if __name__ == '__main__':
     
     #%%
     #th = 0.08
-    th = 0.08
-    pred_bw = (xhat - xr) > th
+    
+    
+    x_diff =  (xhat - xr) 
+    
+    #med = np.median(x_diff)
+    #mad = np.median(np.abs(med - x_diff))
+    #th = med + 6*mad
+    
+    th = 10/255
+    pred_bw = x_diff > th
     I = (target_bw & pred_bw).sum()
     U = (target_bw | pred_bw).sum()
     

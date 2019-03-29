@@ -18,7 +18,7 @@ from skimage.morphology import skeletonize, reconstruction
 
 
 #%%
-def process_file(fname, min_area = 1e4, cell_border_fg_th = 0.12):
+def process_file(fname, min_area = 1e4):
     
     img_ori = cv2.imread(str(fname),-1)
     img = img_ori.astype(np.float32)
@@ -39,6 +39,7 @@ def process_file(fname, min_area = 1e4, cell_border_fg_th = 0.12):
     th_bg = -3
     mask_bg = cv2.adaptiveThreshold(img_n, 255, cv2.ADAPTIVE_THRESH_MEAN_C,\
                 cv2.THRESH_BINARY, 151, th_bg)
+    
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
     mask_bg = cv2.dilate(mask_bg, kernel, iterations=10)
     _, cnts, _ = cv2.findContours(mask_bg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -46,12 +47,6 @@ def process_file(fname, min_area = 1e4, cell_border_fg_th = 0.12):
     valid_cnts = [x for x in cnts if cv2.contourArea(x) > min_area]
     bgnd = img_ori.copy()
     cv2.drawContours(bgnd, valid_cnts, -1, 0, -1)
-    
-    img_is_blurry = img_laplacian>cell_border_fg_th
-    possible_cells_borders = img_is_blurry.astype(np.uint8)
-    possible_cells_borders =  cv2.morphologyEx(possible_cells_borders, cv2.MORPH_CLOSE, kernel, iterations=5)
-    possible_cells_borders = morphology.remove_small_objects(possible_cells_borders>0, 1e3)
-    possible_cells_borders = cv2.dilate(possible_cells_borders.astype(np.uint8), kernel, iterations=5)
     
     possible_cells_borders = np.abs(img_laplacian)
     

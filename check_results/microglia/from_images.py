@@ -42,8 +42,9 @@ if __name__ == '__main__':
     
     #bn = 'microglia-v2_unet_l1smooth_20190228_141742_adam_lr0.00012_wd0.0_batch12'
     #bn = 'microglia-v2-separated_unet_l1smooth_20190302_214016_adam_lr0.00012_wd0.0_batch12'
-    #bn = 'microglia-v2-tight-separated_unet_l1smooth_20190307_085739_adam_lr0.00012_wd0.0_batch12'
+    bn = 'microglia-v2-tight-separated_unet_l1smooth_20190307_085739_adam_lr0.00012_wd0.0_batch12'
     
+    #model_path = Path('/Volumes/loco/') / 'workspace/denoising/results' / 'microglia' / bn / 'checkpoint-299.pth.tar'
     model_path = Path('/Volumes/loco/') / 'workspace/denoising/results' / 'microglia' / bn / 'checkpoint-299.pth.tar'
     #model_path = Path.home() / 'workspace/denoising/results/microglia' / bn / 'checkpoint.pth.tar'
     

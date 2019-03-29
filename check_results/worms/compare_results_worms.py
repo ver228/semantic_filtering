@@ -26,7 +26,7 @@ def data_reader(data_root):
     data_root = Path(data_root)
     
     fnames = list(data_root.rglob('*.tif'))
-    fnames = [x for x in fnames if not x.name.startswith('.')]
+    fnames = [x for x in fnames if not (x.name.startswith('.') or x.name.startswith('_'))]
     for fname in tqdm.tqdm(fnames):
         fname = Path(fname)
         img = cv2.imread(str(fname), -1)
@@ -64,9 +64,11 @@ def _process_img(model, xin, device):
     return xhat
 
 #%%
-def _get_bounding_boxes(bw):
+def _get_bounding_boxes(bw, min_area = 250):
     bw = bw.astype(np.uint8)
     _, cnts, _ = cv2.findContours(bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    cnts = [x for x in cnts if cv2.contourArea(x) >= min_area]
+    
     
     bboxes = [cv2.boundingRect(x) for x in cnts]
     bboxes = np.array(bboxes)
@@ -83,10 +85,14 @@ def xywh2xyxy(bb):
     
     return x1, y1, x2, y2
 
-def score_bboxes(bbox_pred, bbox_target):
-    p_x1, p_y1, p_x2, p_y2 = xywh2xyxy(bbox_pred)
-    t_x1, t_y1, t_x2, t_y2 = xywh2xyxy(bbox_target)
+def score_bboxes(bbox_pred, bbox_target, min_IoU = 0.5):
+    max_cost = 1e3
     
+    p_x1, p_y1, p_x2, p_y2 = xywh2xyxy(bbox_pred)
+    pred_areas = bbox_pred[..., 2]*bbox_pred[..., 3]
+    
+    t_x1, t_y1, t_x2, t_y2 = xywh2xyxy(bbox_target)
+    true_areas = bbox_target[..., 2]*bbox_target[..., 3]
     
     xx1 = np.maximum(p_x1[..., None], t_x1)
     yy1 = np.maximum(p_y1[..., None], t_y1)
@@ -96,12 +102,16 @@ def score_bboxes(bbox_pred, bbox_target):
     h = np.maximum(0.0, yy2 - yy1 + 1)
     
     inter = w * h
-    cost_matrix = inter.copy()
-    cost_matrix[cost_matrix==0] = 1e-3
+    union = pred_areas[..., None] + true_areas - inter
+    IoU = inter/union
+    
+    cost_matrix = IoU.copy()
+    
+    cost_matrix[cost_matrix <= min_IoU] = 1/max_cost
     cost_matrix = 1/cost_matrix
     pred_ind, true_ind = linear_sum_assignment(cost_matrix)
     
-    good = inter[pred_ind, true_ind] > 0
+    good = cost_matrix[pred_ind, true_ind] < max_cost
     pred_ind, true_ind = pred_ind[good], true_ind[good]
     
     
@@ -120,7 +130,7 @@ def get_mIoU(model_path, data_root, device):
     model = model.to(device)
     
     model.eval()
-    th = 20
+    th = 10#20
     gen = data_reader(data_root)
     
     all_IoU = []
@@ -140,6 +150,10 @@ def get_mIoU(model_path, data_root, device):
         bbox_target = _get_bounding_boxes(target_bw)
         
         TP, FP, FN = score_bboxes(bbox_pred, bbox_target)
+        
+        #if FP > 0:
+        #    import pdb
+        #    pdb.set_trace()
         
         scores.append((TP, FP, FN))
         
@@ -182,7 +196,6 @@ if __name__ == '__main__':
         
         Is, Us = map(np.sum, zip(*all_IoU))
         mIoU = Is/Us
-        print(f'{mIoU} :  {bn}')
         
         _results.append((all_IoU, scores, bn, fnames))
         

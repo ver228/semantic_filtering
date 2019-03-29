@@ -16,13 +16,80 @@ import numpy as np
 import torch
 import cv2
 import tqdm
-import pandas as pd
-
-from scipy.spatial.distance import cdist
 from skimage.measure import regionprops
 
 from get_counts import get_labels
 
+
+def calculate_performance(segmentation_labels, target_coords):
+    grouped_labels = {}
+    coords_by_class = {}
+    results = {}
+    for k_pred, pred_labels in  segmentation_labels.items():
+        
+        grouped_labels[k_pred] = {}
+        coords_by_class[k_pred] = {}
+        
+        #get the labels center of mass
+        props = regionprops(pred_labels)
+        centroids_per_label = {x.label:x.centroid for x in props}
+        
+        #get all the labels and ignore label zero
+        all_labs = np.unique(pred_labels)[1:]
+        grouped_labels['u'] = set(all_labs)
+        for k_target, coord_target in target_coords.items():
+            intersected_labels = pred_labels[coord_target[...,1], coord_target[...,0]]
+            intersected_labels = (intersected_labels[intersected_labels>0])
+            
+            #remove labels from the `missing` class
+            grouped_labels['u'] = grouped_labels['u'] - set(intersected_labels)
+            
+            #save labels per class
+            grouped_labels[k_pred][k_target] = intersected_labels
+            
+            #add coordinates per class
+            coords_by_class[k_pred][k_target] = np.array([centroids_per_label[x] for x in intersected_labels])
+        
+        #add coordinates to the `missing` class
+        coords_by_class[k_pred]['u'] = np.array([centroids_per_label[x] for x in grouped_labels['u']])
+        
+    
+        TP = len(grouped_labels[k_pred][k_pred])
+        tot_true = target_coords[k_pred].shape[0]
+        tot_pred = len(all_labs)
+        
+        
+        recall = TP /  tot_true if tot_true else np.nan
+        precision = TP / tot_pred if tot_pred else np.nan
+        
+        
+        N = precision + recall
+        F1 = 2*recall*precision/N if N else np.nan
+        
+        results[k_pred] = {'R':recall, 'P':precision, 'F1':F1, 'TP':TP, 'tot_true':tot_true, 'tot_pred':tot_pred}
+    return results, coords_by_class
+
+def read_GT(fname):
+    img = cv2.imread(str(fname), -1)
+    img = img[..., :3]
+    
+    img_g = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY);
+    bad = (img[..., 0] == 255) & (img[..., 1] <= 10) & (img[..., 2] <= 10)
+    fib =  (img[..., 0] <= 10) & (img[..., 1] == 255) & (img[..., 2] <= 10)
+    hep =  (img[..., 0] <= 10) & (img[..., 1] <= 10) & (img[..., 2] == 255)
+    
+    #ground truth
+    target_coords = {}
+    target_coords['fib'] = cv2.connectedComponentsWithStats(fib.astype(np.uint8))[-1][1:].astype(np.int)
+    target_coords['hep'] = cv2.connectedComponentsWithStats(hep.astype(np.uint8))[-1][1:].astype(np.int)
+    target_coords['bad'] = cv2.connectedComponentsWithStats(bad.astype(np.uint8))[-1][1:].astype(np.int)
+    
+    #remove the labelled pixels and conver the image into gray scale
+    peaks2remove = bad | fib | hep
+    med = cv2.medianBlur(img_g, ksize= 11) + np.random.normal(0, 2, img_g.shape).round().astype(np.int)
+    img_g[peaks2remove] = med[peaks2remove]
+    
+    return img, img_g, target_coords
 
 #%%
 if __name__ == '__main__':
@@ -68,24 +135,9 @@ if __name__ == '__main__':
     all_outputs = {}
     for fname in tqdm.tqdm(fnames):
         #%%
-        img = cv2.imread(str(fname), -1)
-        img = img[..., :3]
         
-        img_g = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY);
-        bad = (img[..., 0] == 255) & (img[..., 1] <= 10) & (img[..., 2] <= 10)
-        fib =  (img[..., 0] <= 10) & (img[..., 1] == 255) & (img[..., 2] <= 10)
-        hep =  (img[..., 0] <= 10) & (img[..., 1] <= 10) & (img[..., 2] == 255)
         
-        #ground truth
-        target_coords = {}
-        target_coords['fib'] = cv2.connectedComponentsWithStats(fib.astype(np.uint8))[-1][1:].astype(np.int)
-        target_coords['hep'] = cv2.connectedComponentsWithStats(hep.astype(np.uint8))[-1][1:].astype(np.int)
-        target_coords['bad'] = cv2.connectedComponentsWithStats(bad.astype(np.uint8))[-1][1:].astype(np.int)
-        
-        #remove the labelled pixels and conver the image into gray scale
-        peaks2remove = bad | fib | hep
-        med = cv2.medianBlur(img_g, ksize= 11) + np.random.normal(0, 2, img_g.shape).round().astype(np.int)
-        img_g[peaks2remove] = med[peaks2remove]
+        img, img_g, target_coords = read_GT(fname)
         
         #%%
         #calculate predictions
@@ -116,55 +168,7 @@ if __name__ == '__main__':
             segmentation_labels[key] = lab
         
         #%%
-        grouped_labels = {}
-        coords_by_class = {}
-        results = {}
-        for k_pred, pred_labels in  segmentation_labels.items():
-            
-            
-            
-            
-            grouped_labels[k_pred] = {}
-            coords_by_class[k_pred] = {}
-            
-            #get the labels center of mass
-            props = regionprops(pred_labels)
-            centroids_per_label = {x.label:x.centroid for x in props}
-            
-            #get all the labels and ignore label zero
-            all_labs = np.unique(pred_labels)[1:]
-            grouped_labels['u'] = set(all_labs)
-            for k_target, coord_target in target_coords.items():
-                intersected_labels = pred_labels[coord_target[...,1], coord_target[...,0]]
-                intersected_labels = (intersected_labels[intersected_labels>0])
-                
-                #remove labels from the `missing` class
-                grouped_labels['u'] = grouped_labels['u'] - set(intersected_labels)
-                
-                #save labels per class
-                grouped_labels[k_pred][k_target] = intersected_labels
-                
-                #add coordinates per class
-                coords_by_class[k_pred][k_target] = np.array([centroids_per_label[x] for x in intersected_labels])
-            
-            #add coordinates to the `missing` class
-            coords_by_class[k_pred]['u'] = np.array([centroids_per_label[x] for x in grouped_labels['u']])
-            
-        
-            TP = len(grouped_labels[k_pred][k_pred])
-            tot_true = target_coords[k_pred].shape[0]
-            tot_pred = len(all_labs)
-            
-            
-            recall = TP /  tot_true if tot_true else np.nan
-            precision = TP / tot_pred if tot_pred else np.nan
-            
-            
-            N = precision + recall
-            F1 = 2*recall*precision/N if N else np.nan
-            
-            results[k_pred] = {'R':recall, 'P':precision, 'F1':F1, 'TP':TP, 'tot_true':tot_true, 'tot_pred':tot_pred}
-        
+        results, coords_by_class = calculate_performance(segmentation_labels, target_coords)
         
         all_outputs[fname.stem] = results
         

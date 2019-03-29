@@ -26,14 +26,20 @@ if __name__ == '__main__':
     
     bn = 'fmnist-v2_unet_l1smooth_20190309_131918_adam_lr0.00032_wd0.0_batch32'
     #bn = 'fmnist-v2-separated_unet_l1smooth_20190309_131701_adam_lr0.00032_wd0.0_batch32'
+    root_dir = Path.home() / 'workspace/denoising/data/MNIST_fashion_BAGS/test'
+    
+    #bn = 'fmnist-v2_unet_l1smooth_20190311_124409_adam_lr0.00032_wd0.0_batch32'
+    #bn = 'fmnist-v2-separated_unet_l1smooth_20190311_124333_adam_lr0.00032_wd0.0_batch32'
+    #root_dir = Path.home() / 'workspace/denoising/data/MNIST_fashion/test'
     
     model_path = Path.home() / 'workspace/denoising/results/fmnist_v2' / bn / 'checkpoint.pth.tar'
-    root_dir = Path.home() / 'workspace/denoising/data/MNIST_fashion/test'
+    
+    
     
     cells1_prefix = 'foreground'
     cells2_prefix = 'background_crops'
     bgnd_prefix = 'background'
-    
+    #%%
     gen = FluoMergedFlow(root_dir = root_dir,
                             bgnd_prefix = bgnd_prefix,
                             cells1_prefix = cells1_prefix,
@@ -54,7 +60,7 @@ if __name__ == '__main__':
                              max_overlap = 0.5,
                              is_separated_output = True
                              )  
-    
+    #%%
     n_ch_in  = 1
     n_ch_out  = 3 if '-separated' in bn else 1
     
@@ -66,8 +72,8 @@ if __name__ == '__main__':
     print(state['epoch'])
     
     #%%
-    #is_plot = False; n_iter = 100
-    is_plot = True; n_iter = 5
+    is_plot = False; n_iter = 1000
+    #is_plot = True; n_iter = 5
     
     
     #th = 0.1
@@ -150,4 +156,10 @@ if __name__ == '__main__':
     mIOU = I/U
     
     print(mIOU, bn)
+#%%
+    #0.813882086461526 fmnist-v2_unet_l1smooth_20190311_124409_adam_lr0.00032_wd0.0_batch32
+    #0.8243763503324658 fmnist-v2-separated_unet_l1smooth_20190311_124333_adam_lr0.00032_wd0.0_batch32
     
+    #BAGS...
+    #0.6802577605438836 fmnist-v2-separated_unet_l1smooth_20190309_131701_adam_lr0.00032_wd0.0_batch32
+    #0.7124671621496745 fmnist-v2_unet_l1smooth_20190309_131918_adam_lr0.00032_wd0.0_batch32

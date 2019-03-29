@@ -21,8 +21,9 @@ import pandas as pd
 from skimage.morphology import watershed
 from skimage.measure import regionprops
 from skimage.filters import threshold_otsu
+#from scipy.ndimage.morphology import binary_fill_holes
 
-def get_labels(x2th, th_min = 0., min_area = 0.):
+def get_labels(x2th, th_min = 0., min_area = 0., max_area = 1e20):
     #%%
     
     th = threshold_otsu(x2th)
@@ -30,11 +31,17 @@ def get_labels(x2th, th_min = 0., min_area = 0.):
     mask = (x2th>th).astype(np.uint8)
     
     
-    
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=3)
-    dist_t = cv2.distanceTransform(mask,cv2.DIST_L2,5)
     
+    #fill holes
+    mask_filled = np.zeros_like(mask)
+    _, cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(mask_filled, cnts, -1, 1, -1)
+    mask = mask_filled
+    
+    #%%
+    dist_t = cv2.distanceTransform(mask,cv2.DIST_L2,5)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(11,11))
     
     mask_d = cv2.dilate(dist_t, kernel)
@@ -49,7 +56,7 @@ def get_labels(x2th, th_min = 0., min_area = 0.):
     labels = watershed(-dist_t, markers, mask=mask)
     props = regionprops(labels)
     for p in props:
-        if p.area < min_area:
+        if p.area < min_area or p.area >= max_area:
             min_row, min_col, max_row, max_col = p.bbox
             labels[min_row:max_row, min_col:max_col][p.image] = 0
     #%%

@@ -39,14 +39,14 @@ if __name__ == '__main__':
     #%%
     if True:
         def _get_files(dname):
-            return [str(x).replace(str(dname), '') for x in dname.rglob('*.tif') if not x.name.startswith('.')]
+            return [str(x).replace(str(dname), '') for x in dname.rglob('*.tif') if not x.name.startswith('.') and not x.name.startswith('_')]
         
         fnames_rgb = _get_files(save_root)
         fnames = _get_files(data_root)
         
-        
+        #%%
         bad_files = [data_root / x[1:] for x in set(fnames) - set(fnames_rgb)]
         
         for x in bad_files:
-            os.remove(x)
+            x.rename(x.parent / ('_' + x.name))
         
