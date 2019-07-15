@@ -14,7 +14,6 @@ from tensorboardX import SummaryWriter
 import torch
 from torch.utils.data import DataLoader
 import os
-import datetime
 import shutil
 import tqdm
 import numpy as np
@@ -42,18 +41,18 @@ def get_device(cuda_id):
     return device
 
 
+
+
 def train(save_prefix,
         model,
         device,
         flow,
         criterion,
         optimizer = None,
+        lr_scheduler = None,
         test_func = None,
         log_dir = log_dir_root_dflt,
-        
         batch_size = 16,
-        lr = 1e-4, 
-        weight_decay = 0.0,
         n_epochs = 2000,
         num_workers = 1,
         init_model_path = None,
@@ -62,17 +61,6 @@ def train(save_prefix,
     
     
     loader = DataLoader(flow, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    model = model.to(device)
-    
-    
-    basename = save_prefix
-    if not optimizer:
-        model_params = filter(lambda p: p.requires_grad, model.parameters())
-        optimizer = torch.optim.Adam(model_params, lr = lr, weight_decay=weight_decay)
-        
-        now = datetime.datetime.now()
-        date_str = now.strftime('%Y%m%d_%H%M%S')
-        basename = f'{basename}_{date_str}_adam_lr{lr}_wd{weight_decay}_batch{batch_size}'
     
     epoch_init = 0 #useful to keep track in restarted models
     if init_model_path:
@@ -84,21 +72,22 @@ def train(save_prefix,
         model.load_state_dict(state['state_dict'])
         optimizer.load_state_dict(state['optimizer'])
         epoch_init = state['epoch']
-        basename = 'R_' + basename
+        save_prefix = 'R_' + save_prefix
         print('{} loaded...'.format(init_model_path))
     
     
-    log_dir = log_dir / basename
+    log_dir = log_dir / save_prefix
     logger = SummaryWriter(log_dir = str(log_dir))
     
     
     best_loss = 1e10
     pbar_epoch = tqdm.trange(n_epochs)
     for epoch in pbar_epoch:
-        
+        if lr_scheduler is not None:
+            lr_scheduler.step()
         #train
         model.train()
-        pbar = tqdm.tqdm(loader, desc = f'{basename} Train')        
+        pbar = tqdm.tqdm(loader, desc = f'{save_prefix} Train')        
         train_avg_loss = 0
         for X, target in pbar:
             assert not np.isnan(X).any()
@@ -113,11 +102,9 @@ def train(save_prefix,
             optimizer.zero_grad()               # clear gradients for this training step
             loss.backward()                     # backpropagation, compute gradients
             optimizer.step() 
-        
+            
             train_avg_loss += loss.item()
             
-            
-        
         train_avg_loss /= len(loader)
         logger.add_scalar('train_epoch_loss', train_avg_loss, epoch)
         
@@ -143,6 +130,8 @@ def train(save_prefix,
             }
         
         is_best = avg_loss < best_loss
+        if is_best:
+            best_loss = avg_loss
         save_checkpoint(state, is_best, save_dir = str(log_dir))
         
         if (epoch+1) % save_frequency == 0:

@@ -22,53 +22,14 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 #%%
 if __name__ == '__main__':
-    #bn = 'sBBBC026-hepatocytes_l1smooth_20190219_175950_unet_adam_lr0.00032_wd0.0_batch32'
-    #model_path =  Path('/Volumes/loco/workspace/denoising/results/') / bn.split('_')[0] / bn / 'checkpoint.pth.tar'
-    
-    
-    #bn = 'BBBC026-hepatocytes_l1smooth_20190218_153253_unet_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-fibroblasts_l1smooth_20190218_162426_unet_adam_lr0.00032_wd0.0_batch32'
-    
-    #bn = 'BBBC026-hepatocytes-log_l1smooth_20190218_182937_unet_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-fibroblasts-log_l1smooth_20190219_022405_unet_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-hepatocytes_l1smooth_20190218_222644_unet_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-fibroblasts_l1smooth_20190219_062152_unet_adam_lr0.00032_wd0.0_batch32'
-    
-    #bn = 'BBBC026-hepatocytes-log_l1smooth_20190219_111711_unet_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'sBBBC026-hepatocytes_l1smooth_20190219_155630_unet_adam_lr0.00032_wd0.0_batch32'
-    
-    #bn = 'sBBBC026-fibroblasts_l1smooth_20190219_201226_unet_adam_lr0.00032_wd0.0_batch32'
-    
-    #bn = 'sBBBC026-fibroblasts_l1smooth_20190220_184127_unet_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'sBBBC026-hepatocytes_l1smooth_20190220_184125_unet_adam_lr0.00032_wd0.0_batch32'
-    
-    #model_path = Path.home() / 'workspace/denoising/results' / bn.split('_')[0] / bn / 'checkpoint.pth.tar'
-    
-    #bn = 'BBBC026-fibroblasts_unet_l1smooth_20190222_183808_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-separated_unet_l1smooth_20190222_184510_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-hepatocytes_unet_l1smooth_20190222_183622_adam_lr0.00032_wd0.0_batch32'
-     
-    #bn = 'BBBC026-separated_unet_l1smooth_20190223_221251_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-hepatocytes_unet_l1smooth_20190223_220901_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-fibroblasts_unet_l1smooth_20190223_220826_adam_lr0.00032_wd0.0_batch32'
-    
-    #bn = 'BBBC026-separated_unet_l1smooth_20190224_105903_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-hepatocytes_unet_l1smooth_20190224_105953_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-fibroblasts_unet_l1smooth_20190224_105911_adam_lr0.00032_wd0.0_batch32'
-    
-    
-    #bn = 'BBBC026-separated_unet_l1smooth_20190225_235932_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-hepatocytes_unet_l1smooth_20190226_000010_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-fibroblasts_unet_l1smooth_20190225_235927_adam_lr0.00032_wd0.0_batch32'
-    
-    bn = 'BBBC026-separated_unet_l1smooth_20190226_082017_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-hepatocytes_unet_l1smooth_20190226_082040_adam_lr0.00032_wd0.0_batch32'
-    #bn = 'BBBC026-fibroblasts_unet_l1smooth_20190226_082007_adam_lr0.00032_wd0.0_batch32'
+    bn = 'BBBC026_unet-filter_l1smooth_20190702_134456_adam_lr0.00032_wd0.0_batch32'
+    #bn = 'BBBC026_unet-decomposition_l1smooth_20190702_134456_adam_lr0.00032_wd0.0_batch32'
     
     model_path = Path.home() / 'workspace/denoising/results/BBBC026' / bn / 'checkpoint.pth.tar'
+    model_path = Path.home() / 'workspace/denoising/results/BBBC026' / bn / 'checkpoint-24.pth.tar'
     
     n_ch_in, n_ch_out  = 1, 1
-    if '-separated' in bn:
+    if '-decomposition' in bn:
         n_ch_out = 3
     
     model = UNet(n_channels = n_ch_in, n_classes = n_ch_out)
@@ -78,6 +39,8 @@ if __name__ == '__main__':
     model.load_state_dict(state['state_dict'])
     model.eval()
     #%%
+    root_dir = Path('/Users/avelinojaver/OneDrive - Nexus365/papers/miccai2019/data/hepatocytes/BBBC026')
+    
     #fname = '/Users/avelinojaver/Downloads/BBBC026_v1_images/ADSASS092408-GHAD2-D6-20x_O23_s9_w14C780EEA-354A-4814-9D87-38CA9E3D5F39.png'
     #fname = '/Users/avelinojaver/Downloads/BBBC026_v1_images/ADSASS092408-GHAD2-D6-20x_O01_s6_w132859271-AB55-46F9-8029-6A1742DECF06.png'
     #fname = '/Users/avelinojaver/Downloads/BBBC026_v1_images/ADSASS092408-GHAD2-D6-20x_O09_s3_w1FB80F860-83B8-4E63-B7B1-D54D98716578.png'
@@ -85,10 +48,12 @@ if __name__ == '__main__':
     #fname = '/Users/avelinojaver/Downloads/BBBC026_GT_images/A03_s1.png'
     #fname = '/Users/avelinojaver/Downloads/BBBC026_GT_images/A07_s4.png'
     #fname = '/Users/avelinojaver/Downloads/BBBC026_GT_images/C09_s2.png'
-    fname = '/Users/avelinojaver/Downloads/BBBC026_GT_images/M19_s6.png'    
+    fname = root_dir / 'BBBC026_GT_images/M19_s6.png'    
     
     
-    img = cv2.imread(fname, -1)
+    
+    
+    img = cv2.imread(str(fname), -1)
     
     if img.ndim == 2:
         cm_hep, cm_fib = None, None

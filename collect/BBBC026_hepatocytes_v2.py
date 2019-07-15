@@ -130,10 +130,10 @@ def save_data_crops(save_dir, fgnd_crops, base_name):
 
 if __name__ == '__main__':
     #save_dir_root = Path.home() / 'workspace/denoising/data/BBBC026_v2'
-    save_dir_root = Path.home() / 'Desktop/BBBC026_divided'
+    save_dir_root = Path.home() / 'Desktop/BBBC026_all'
     
-    data_dir = Path('/Users/avelinojaver/Downloads/BBBC026_GT_images/')
-    
+    #data_dir = Path('/Users/avelinojaver/Downloads/BBBC026_GT_images/')
+    data_dir = Path.home() / 'workspace/datasets/BBBC/BBBC026/BBBC026_GT_images'
     
     
     heb_save_dir_root = save_dir_root / 'hepatocytes'
@@ -144,10 +144,10 @@ if __name__ == '__main__':
     
     fnames = sorted(list(fnames), key = lambda x : x.name)
     
-    fnames_train = fnames[:-1]
-    fname_test = fnames[-1]
+    #fnames_train = fnames[:-1]
+    #fname_test = fnames[-1]
     
-    for fname in fnames_train:
+    for fname in fnames:
         
         fib_crops, heb_crops, bgnd = divide_image(fname)
         
@@ -156,8 +156,8 @@ if __name__ == '__main__':
         b_fname.parent.mkdir(parents=True, exist_ok=True)
         cv2.imwrite(str(b_fname), bgnd)
         
-        #save_data_crops(fib_save_dir_root, fib_crops, base_name)
-        #save_data_crops(heb_save_dir_root, heb_crops, base_name)
+        save_data_crops(fib_save_dir_root, fib_crops, base_name)
+        save_data_crops(heb_save_dir_root, heb_crops, base_name)
         
     
     

@@ -93,15 +93,20 @@ def read_GT(fname):
 
 #%%
 if __name__ == '__main__':
-    root_dir = Path.home() / 'workspace/datasets/BBBC026/BBBC026_GT_images'
+    #root_dir = Path.home() / 'workspace/datasets/BBBC026/BBBC026_GT_images'
+    root_dir = '/Users/avelinojaver/OneDrive - Nexus365/papers/miccai2019/data/hepatocytes/BBBC026/BBBC026_GT_images'
+    
+    
+    bn = 'BBBC026_unet-decomposition_l1smooth_20190701_204516_adam_lr0.00032_wd0.0_batch32'
+    model_path = Path.home() / 'workspace/denoising/results/BBBC026' / bn / f'checkpoint.pth.tar'
     
     #bn = 'BBBC026-separated_unet_l1smooth_20190226_082017_adam_lr0.00032_wd0.0_batch32'
     #bn = 'BBBC026-hepatocytes_unet_l1smooth_20190226_082040_adam_lr0.00032_wd0.0_batch32'
-    bn = 'BBBC026-fibroblasts_unet_l1smooth_20190226_082007_adam_lr0.00032_wd0.0_batch32'
+    #bn = 'BBBC026-fibroblasts_unet_l1smooth_20190226_082007_adam_lr0.00032_wd0.0_batch32'
+    #n_epochs = 349#299#
+    #model_path = Path.home() / 'workspace/denoising/results/_old_BBBC026' / bn / f'checkpoint-{n_epochs}.pth.tar'
     
     
-    n_epochs = 349#299#
-    model_path = Path.home() / 'workspace/denoising/results/BBBC026' / bn / f'checkpoint-{n_epochs}.pth.tar'
     
     save_dir = '/Users/avelinojaver/OneDrive - Nexus365/papers/miccai2019/data/hepatocytes/'
     save_dir = Path(save_dir)
