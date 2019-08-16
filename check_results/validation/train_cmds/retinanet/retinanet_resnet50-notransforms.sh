@@ -9,6 +9,7 @@ cd $HOME/GitLab/bgnd_removal/check_results/validation
 python -W ignore train_fasterrcnn.py \
 --model_name 'retinanet' \
 --backbone 'resnet50' \
+--transform_type 'none' \
 --optimizer_name 'adam' \
 --lr_scheduler_name 'stepLR-40-0.1' \
 --lr 1e-4 \

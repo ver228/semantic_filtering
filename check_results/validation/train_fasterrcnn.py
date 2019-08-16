@@ -6,7 +6,8 @@ Created on Thu Jul  4 16:09:35 2019
 @author: avelinojaver
 """
 from flow import BBBC042Dataset, collate_simple, get_transforms
-from retinanet import RetinaNet
+from models.retinanet import RetinaNet
+from models.backbone_utils import retinanet_fpn_backbone, fasterrcnn_fpn_backbone
 
 from pathlib import Path
 import tqdm
@@ -29,10 +30,18 @@ from torch.utils.data import DataLoader
 pretrained_path = Path.home() / 'workspace/pytorch/pretrained_models/'
 if pretrained_path.exists():
     os.environ['TORCH_HOME'] = str(pretrained_path)
-from torchvision.models.detection import fasterrcnn_resnet50_fpn, FasterRCNN
-from torchvision.models.detection.backbone_utils import BackboneWithFPN
-from torchvision.models import resnet
-from torchvision.ops import misc as misc_nn_ops
+from torchvision.models.detection import FasterRCNN, fasterrcnn_resnet50_fpn
+
+def get_fasterrcnn(backbone_name = 'resnet50', progress=True, pretrained_backbone=True, **kwargs):
+    _backbone = retinanet_fpn_backbone(backbone_name, pretrained_backbone)
+    model = FasterRCNN(_backbone,  **kwargs)
+    return model
+
+def get_retinanet(backbone_name = 'resnet50', progress=True, pretrained_backbone=True, **kwargs):
+    _backbone = retinanet_fpn_backbone(backbone_name, pretrained_backbone)
+    model = RetinaNet(_backbone,  **kwargs)
+    return model
+
 
 def get_scores(prediction, target, IoU_cutoff = 0.25):
     if prediction.size == 0:
@@ -199,58 +208,6 @@ def save_checkpoint(state, is_best, save_dir, filename='checkpoint.pth.tar'):
         shutil.copyfile(checkpoint_path, best_path)
 
 
-class FrozenBatchNorm2dv2(misc_nn_ops.FrozenBatchNorm2d):
-    def __init__(self, *args, **argkws):
-        super().__init__( *args, **argkws)
-        #the batchnorm in resnext is missing a variable in the presaved values, but the pytorch does not have it FrozenBatchNorm2d
-        #so I am adding it
-        self.register_buffer('num_batches_tracked', torch.tensor(0, dtype=torch.long))
-
-def resnet_fpn_backbone(backbone_name, pretrained):
-    print(backbone_name)
-    
-    norm_layer = FrozenBatchNorm2dv2 if 'resnext' in backbone_name else misc_nn_ops.FrozenBatchNorm2d
-    
-    backbone = resnet.__dict__[backbone_name](
-        pretrained=pretrained,
-        norm_layer=norm_layer)
-    # freeze layers
-    for name, parameter in backbone.named_parameters():
-        if 'layer2' not in name and 'layer3' not in name and 'layer4' not in name:
-            parameter.requires_grad_(False)
-
-    return_layers = {'layer1': 0, 'layer2': 1, 'layer3': 2, 'layer4': 3}
-    
-    if backbone_name == 'resnet18' or backbone_name == 'resnet34':
-        in_channels_stage2 = 64
-        in_channels_list = [
-            in_channels_stage2,
-            in_channels_stage2 * 2,
-            in_channels_stage2 * 4,
-            in_channels_stage2 * 8,
-        ]
-        out_channels = 256
-    else:
-        in_channels_stage2 = 256
-        in_channels_list = [
-            in_channels_stage2,
-            in_channels_stage2 * 2,
-            in_channels_stage2 * 4,
-            in_channels_stage2 * 8,
-        ]
-        out_channels = 256
-    
-    return BackboneWithFPN(backbone, return_layers, in_channels_list, out_channels)
-
-def get_fasterrcnn(backbone_name = 'resnet50', progress=True, pretrained_backbone=True, **kwargs):
-    _backbone = resnet_fpn_backbone(backbone_name, pretrained_backbone)
-    model = FasterRCNN(_backbone,  **kwargs)
-    return model
-
-def get_retinanet(backbone_name = 'resnet50', progress=True, pretrained_backbone=True, **kwargs):
-    _backbone = resnet_fpn_backbone(backbone_name, pretrained_backbone)
-    model = RetinaNet(_backbone,  **kwargs)
-    return model
 
 #%%
 def get_model(model_name, backbone_name, roi_size, pretrained_backbone = True):

@@ -10,7 +10,7 @@ python -W ignore train_fasterrcnn.py \
 --model_name 'retinanet' \
 --backbone 'resnet50' \
 --optimizer_name 'adam' \
---lr 1e-3 \
+--lr 1e-4 \
 --batch_size 12 \
 --roi_size 512 \
 --num_epochs 130

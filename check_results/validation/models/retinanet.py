@@ -281,6 +281,7 @@ class RetinaNet(nn.Module):
         images, targets = self.transform(images, targets)
         
         features = self.backbone(images.tensors)
+        
         if isinstance(features, torch.Tensor):
             features = OrderedDict([(0, features)])
         

@@ -36,7 +36,7 @@ def get_transforms(transform_type, roi_size = None):
     else:
         raise ValueError(f'Not implemented {transform_type}')
         
-    transforms.append(ToTensor)
+    transforms.append(ToTensor())
     
     transforms = Compose(transforms)
     return transforms

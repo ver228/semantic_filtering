@@ -8,6 +8,7 @@ Created on Sun Aug 19 10:27:31 2018
 
 from torch import nn
 import torch
+
 class L0AnnelingLoss(nn.Module):
     def __init__(self, anneling_rate=1/50):
         super().__init__()
@@ -23,8 +24,6 @@ class L0AnnelingLoss(nn.Module):
         self._n_calls += 1
         
         return ((input_v-target).abs() + self._eps).pow(gamma).sum()
-
-
 
 class BootstrapedPixL2(nn.Module):
     '''bootstrapped pixel-wise L2 loss'''
