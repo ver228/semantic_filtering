@@ -10,7 +10,7 @@ from pathlib import Path
 dname = Path(__file__).resolve().parents[2]
 sys.path.append(str(dname))
 
-from bgnd_removal.models import UNet
+from semantic_filtering.models import UNet
 
 import numpy as np
 import torch

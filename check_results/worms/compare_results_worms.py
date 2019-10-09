@@ -12,7 +12,7 @@ dname = Path(__file__).resolve().parents[2]
 sys.path.append(str(dname))
 
 from scipy.optimize import linear_sum_assignment
-from bgnd_removal.models import UNet
+from semantic_filtering.models import UNet
 
 import torch
 import numpy as np

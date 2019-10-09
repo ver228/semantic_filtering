@@ -5,7 +5,7 @@ export PATH="/users/rittscher/avelino/miniconda3/bin:$PATH"
 
 echo "********"
 source activate pytorch-1.0
-cd $HOME/GitLab/bgnd_removal/scripts
+cd $HOME/GitLab/semantic_filtering/scripts
 
 
 python -W ignore train_model.py \

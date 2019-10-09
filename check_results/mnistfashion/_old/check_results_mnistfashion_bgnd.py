@@ -12,9 +12,9 @@ dname = Path(__file__).resolve().parents[2]
 sys.path.append(str(dname))
 
 
-from bgnd_removal.models import UNet
-from bgnd_removal.trainer import log_dir_root_dflt
-from bgnd_removal.flow import MNISTFashionFlow
+from semantic_filtering.models import UNet
+from semantic_filtering.trainer import log_dir_root_dflt
+from semantic_filtering.flow import MNISTFashionFlow
 
 import torch
 import numpy as np

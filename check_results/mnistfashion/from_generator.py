@@ -12,8 +12,8 @@ dname = Path(__file__).resolve().parents[2]
 sys.path.append(str(dname))
 
 
-from bgnd_removal.models import UNet
-from bgnd_removal.flow import FluoMergedFlow
+from semantic_filtering.models import UNet
+from semantic_filtering.flow import FluoMergedFlow
 
 import torch
 import numpy as np

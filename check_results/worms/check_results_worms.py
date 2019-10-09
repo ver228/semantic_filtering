@@ -11,12 +11,12 @@ from pathlib import Path
 dname = Path(__file__).resolve().parents[2]
 sys.path.append(str(dname))
 
-
-from bgnd_removal.models import UNet
+from semantic_filtering.models import UNet
 
 import torch
 import numpy as np
 import cv2
+import matplotlib.pylab as plt
 #%%
 if __name__ == '__main__':
     #new
@@ -48,8 +48,8 @@ if __name__ == '__main__':
     
     #fname = '/Users/avelinojaver/OneDrive - Nexus365/worms/skeletonize_training/manual_annotations/raw/Phase3/MaskedVideos/Set1_CB369_CB1490_Ch1_03072018_163429.hdf5'
     #fname = '/Volumes/rescomp1/data/denoising/data/c_elegans_divergent/test/MaskedVideos/CeNDR_Set2_060717/CB4856_worms5_food1-10_Set7_Pos4_Ch5_06072017_144104/3.tif'
-    fname = '/Volumes/rescomp1/data/denoising/data/c_elegans_divergent/test/MaskedVideos/CeNDR_Set2_060717/JU775_worms10_food1-10_Set9_Pos4_Ch2_06072017_152141/_0.tif'
-    #fname = '/Volumes/rescomp1/data/denoising/data/c_elegans_divergent/test/MaskedVideos/CeNDR_Set2_060717/DL238_worms10_food1-10_Set3_Pos4_Ch1_06072017_124159/_0.tif'
+    #fname = '/Volumes/rescomp1/data/denoising/data/c_elegans_divergent/test/MaskedVideos/CeNDR_Set2_060717/JU775_worms10_food1-10_Set9_Pos4_Ch2_06072017_152141/_0.tif'
+    fname = '/Volumes/rescomp1/data/denoising/data/c_elegans_divergent/test/MaskedVideos/CeNDR_Set2_060717/DL238_worms10_food1-10_Set3_Pos4_Ch1_06072017_124159/_0.tif'
     fname = Path(fname)
     
     if fname.suffix == '.hdf5':
@@ -115,6 +115,17 @@ if __name__ == '__main__':
     for ax in axs:
         ax.axis('off')
         
-        #%%
+    #%%
+    
+    dat2save = [xr, xhat, pred_bw.astype(np.float), xr-xhat]
+    
+    for x in dat2save:
+        bot, top = x.min(), x.max()
+        x_norm = (x - bot)/(top - bot)
+        
+        
+        
+        
+    
         
         

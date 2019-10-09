@@ -16,11 +16,11 @@ sys.path.append(str(root_dir))
 import datetime
 import torch
 
-from bgnd_removal.trainer import train, get_device, log_dir_root_dflt
-from bgnd_removal.flow import FluoMergedFlow, data_types_dflts
-from bgnd_removal.models import UNet, get_loss
+from semantic_filtering.trainer import train, get_device, log_dir_root_dflt
+from semantic_filtering.flow import FluoMergedFlow, BasicFlow, data_types_basic, data_types_synthetic
+from semantic_filtering.models import UNet, get_loss
 
-def train_merged(
+def train_model(
                 data_type = 'BBBC042-colour',
                 model_name = 'unet-filter',
                 loss_type = 'l1smooth',
@@ -39,21 +39,32 @@ def train_merged(
     
     
     
-    dflts = data_types_dflts[data_type]
-    flow_args = dflts['flow_args']
-    n_ch_in = dflts['n_ch_in']
-    n_ch_out = dflts['n_ch_out']
+    if data_type in data_types_synthetic:
     
-    is_separated_output = False
-    if model_name.endswith('-decomposition'):
-        is_separated_output = True
-        n_ch_out = 3*n_ch_out
+        dflts = data_types_synthetic[data_type]
+        n_ch_in = dflts['n_ch_in']
+        n_ch_out = dflts['n_ch_out']
+        is_separated_output = False
+        if model_name.endswith('-decomposition'):
+            is_separated_output = True
+            n_ch_out = 3*n_ch_out
+        
+        gen = FluoMergedFlow(epoch_size = 20480,
+                                **dflts['flow_args'],
+                                is_separated_output = is_separated_output,
+                                is_preloaded = is_preloaded
+                                 )  
+        
+    else:
+        dflts = data_types_basic[data_type]
+        n_ch_in = dflts['n_ch_in']
+        n_ch_out = dflts['n_ch_out']
+        
+        gen = BasicFlow(**dflts['flow_args'] )  
     
-    gen = FluoMergedFlow(epoch_size = 20480,
-                            **flow_args,
-                            is_separated_output = is_separated_output,
-                            is_preloaded = is_preloaded
-                             )  
+    
+    
+    
     
     model = UNet(n_channels = n_ch_in, n_classes = n_ch_out)
     device = get_device(cuda_id)
@@ -102,5 +113,5 @@ def train_merged(
 
 if __name__ == '__main__':
     import fire
-    fire.Fire(train_merged)
+    fire.Fire(train_model)
     

@@ -7,7 +7,7 @@ module load Anaconda3/5.1.0
 
 echo "********"
 source activate pytorch-0.4.1
-cd /users/rittscher/avelino/GitLab/bgnd_removal/scripts
+cd /users/rittscher/avelino/GitLab/semantic_filtering/scripts
 
 
 python -W ignore train_fmnist.py --batch_size 32 --data_type 'fmnist-separated-out' --loss_type 'l1smooth' --lr 32e-5  --num_workers 8

@@ -7,7 +7,7 @@ module load Anaconda3/5.1.0
 
 echo "********"
 source activate pytorch-0.4.1
-cd /users/rittscher/avelino/GitLab/bgnd_removal/scripts
+cd /users/rittscher/avelino/GitLab/semantic_filtering/scripts
 
 for i in {1..5};
 do

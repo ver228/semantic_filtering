@@ -7,7 +7,7 @@ module load Anaconda3/5.1.0
 
 echo "********"
 source activate pytorch-0.4.1
-cd /users/rittscher/avelino/GitLab/bgnd_removal/scripts
+cd /users/rittscher/avelino/GitLab/semantic_filtering/scripts
 
 
 python train_model.py --batch_size 32  --data_type 'nanoscopy-vesicles' --loss_type 'l2' \
